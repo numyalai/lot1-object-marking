@@ -1,17 +1,16 @@
 let chai = require("chai");
 const expect = chai.expect;
-const request = require('request');
-var urlBase = "https://localhost:3000";
 let chaiHttp = require("chai-http");
 chai.should();
 chai.use(chaiHttp)
 const https = require('https')
+var request = require('request');
 
 /**
  * Test the POST route
  */
 describe("POST /users/register", () => {
-    it("1. It should REGISTER a new user", (done) => {
+    it("1. It should find the user already exists", (done) => {
         const data = new TextEncoder().encode(
             JSON.stringify({
                 name: "user1",
@@ -33,13 +32,46 @@ describe("POST /users/register", () => {
         const req = https.request(options, res => {
             console.log(`statusCode: ${res.statusCode}`)
             res.on('data', d => {
-                process.stdout.write("Response: " + d)
+                console.log("Message: " + d.toString())
+                expect(res.statusCode).to.equal(400)
             })
         })
         req.on('error', error => {
             console.error("Error: " + error)
         })
+        req.write(data)
+        req.end()
+        done()
 
+    });
+    it("1. It should REGISTER a new user, expected 200", (done) => {
+        const data = new TextEncoder().encode(
+            JSON.stringify({
+                name: "user1",
+                email: "user1@email.com",
+                password: "1234"
+            })
+        )
+        const options = {
+            "rejectUnauthorized": false,
+            host: 'localhost',
+            port: 3000,
+            path: '/users/register',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': data.length
+            }
+        }
+        const req = https.request(options, res => {
+            console.log(`statusCode: ${res.statusCode}`)
+            res.on('data', d => {
+                console.log("Message: " + d.toString())
+            })
+        })
+        req.on('error', error => {
+            console.error("Error: " + error)
+        })
         req.write(data)
         req.end()
         done()
@@ -66,7 +98,8 @@ describe("POST /users/register", () => {
         const req = https.request(options, res => {
             console.log(`statusCode: ${res.statusCode}`)
             res.on('data', d => {
-                process.stdout.write("Response: " + d )
+                console.log("Successful login, User Id is" + d.toString())
+                expect(res.statusCode).to.equal(200)
             })
         })
         req.on('error', error => {
@@ -101,13 +134,14 @@ describe("POST /users/register", () => {
         const req = https.request(options, res => {
             console.log(`statusCode: ${res.statusCode}`)
             res.on('data', d => {
-                process.stdout.write("Response: " + d)
+                console.log("Response: " + d.toString())
+                expect(res.statusCode).to.equal(200)
+
             })
         })
         req.on('error', error => {
             console.error("Error: " + error)
         })
-
         req.write(data)
         req.end()
         done()
@@ -133,7 +167,7 @@ describe("GET /models", () => {
         const req = https.request(options, res => {
             console.log(`statusCode: ${res.statusCode}`)
             res.on('data', d => {
-                //process.stdout.write("Response: " + d)
+                console.log("Response: " + d.toString())
             })
         })
         req.on('error', error => {
@@ -170,7 +204,7 @@ describe("POST /models/add-model", () => {
             "rejectUnauthorized": false,
             host: 'localhost',
             port: 3000,
-            path: '/users/register',
+            path: '/models/add-model',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -180,13 +214,12 @@ describe("POST /models/add-model", () => {
         const req = https.request(options, res => {
             console.log(`statusCode: ${res.statusCode}`)
             res.on('data', d => {
-                //process.stdout.write("Response: " + d)
+                process.stdout.write("Response: " + d)
             })
         })
         req.on('error', error => {
             console.error("Error: " + error)
         })
-
         req.write(data)
         req.end()
         done()
@@ -194,32 +227,26 @@ describe("POST /models/add-model", () => {
     });
 });
 
+it('Main page content', function(done) {
 
-// it('Main page content', function(done) {
-//
-//     const payload = {
-//         name: "user1",
-//         email: "user@email.com",
-//         password: "1234"
-//     };
-//     request('https://localhost:3000' , function(error, response, body) {
-//         expect(200);
-//         console.log(body)
-//         done();
-//     });
-// });
-//
-//
-// it('Main page content', function(done) {
-//
-//     const payload = {
-//         name: "user1",
-//         email: "user@email.com",
-//         password: "1234"
-//     };
-//     request('http://localhost:3000/users/register' , function(error, response, body) {
-//         expect(200);
-//         console.log(body)
-//         done();
-//     });
-// });
+    const payload = {
+        name: "user1",
+        email: "user@email.com",
+        password: "1234"
+    };
+    const options = {
+        "rejectUnauthorized": false,
+        host: 'localhost',
+        port: 3000,
+        method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }
+    request('https://localhost:3000' ,options, function(error, response, body) {
+        console.log("Response code" + response.statusCode)
+        expect(response.statusCode).to.equal(200)
+        done();
+    });
+});
+
